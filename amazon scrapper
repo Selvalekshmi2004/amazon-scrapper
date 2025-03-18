@@ -1,0 +1,47 @@
+import requests
+import csv
+from bs4 import BeautifulSoup
+
+# URL and Parameters
+url = "https://www.amazon.in/s?k=mobiles+5%2Bg&i=electronics&rh=n%3A976419031%2Cp_36%3A2060000-10110000%2Cp_123%3A46655&dc&ds=v1%3AMA5wH8%2B%2FION0p%2FmJzlZxWcUnMwDnlvqOwKEs2yPFYa4&crid=H17N89QLP0HO&qid=1731082996&rnid=91049095031&sprefix=mobiles%2Celectronics%2C286&ref=sr_nr_p_123_4"
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36"
+}
+
+# Send GET Request
+response = requests.get(url, headers=headers)
+soup = BeautifulSoup(response.text, "html.parser")
+
+# Container for products
+products = []
+
+# Parse products (you may need to adjust these selectors based on page structure)
+for item in soup.select(".s-main-slot .s-result-item"):
+    title = item.select_one("h2 .a-text-normal")
+    price = item.select_one(".a-price-whole")
+    rating = item.select_one(".a-icon-alt")
+
+    if title and price:
+        products.append({
+            "Title": title.get_text(strip=True),
+            "Price": price.get_text(strip=True),
+            "Rating": rating.get_text(strip=True) if rating else "No rating"
+        })
+
+# Limit to max items
+products = products[:30]
+
+# Save to CSV
+with open("amazon products.csv", "w", newline="", encoding="utf-8") as csvfile:
+    fieldnames = ["Title", "Price", "Rating"]
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    
+    writer.writeheader()
+    for product in products:
+        writer.writerow(product)
+
+print("Data has been saved to amazon products.csv")
+
+
+
+
